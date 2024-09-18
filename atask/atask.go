@@ -7,6 +7,11 @@ import (
 	"github.com/hibiken/asynq"
 )
 
+const (
+	ProviderTypeDefault = iota // 默认, 由内置 cron 调度
+	ProviderTypeXXLJob         // 由外部 xxl-job 调度
+)
+
 type RedisClientOpt = asynq.RedisClientOpt
 
 // TaskManager 任务管理器
@@ -16,9 +21,13 @@ type TaskManager struct {
 
 	asynqRedisOpt RedisClientOpt
 	asynqServer   *asynq.Server
+
+	providerType int // 任务调度实现方式
 }
 
 type ParamNewTM struct {
+	ProviderType int // 任务调度实现方式
+
 	RedisOpt RedisClientOpt
 	Logger   ILogger
 }
@@ -26,6 +35,12 @@ type ParamNewTM struct {
 func NewTaskManager(param ParamNewTM) (tm *TaskManager) {
 	tm = &TaskManager{}
 	tm.taskList = make([]ITask, 0, 20)
+
+	// provider
+	tm.providerType = param.ProviderType
+	if tm.providerType != ProviderTypeDefault && tm.providerType != ProviderTypeXXLJob {
+		panic("atask provider type error")
+	}
 
 	// logger
 	tm.logger = param.Logger
@@ -149,38 +164,16 @@ func (tm *TaskManager) handleTask(ctx context.Context) {
 	time.Sleep(time.Second * 1)
 	logPrefix := "[TaskManager TaskHandler]"
 	tm.logger.Info(logPrefix + " 开始执行...")
-	var producerList = make(chan ITask, 20)
-	go func() {
-		for _, v := range tm.taskList {
-			if v.TaskHandler != nil {
-				tm.logger.Info(logPrefix+" 添加任务: %s", v.TaskName())
-				producerList <- v
-			}
+
+	switch tm.providerType {
+	case ProviderTypeXXLJob:
+
+	case ProviderTypeDefault:
+		fallthrough
+	default:
+		hdlDefault := taskHandlerProviderDefault{
+			tm: tm,
 		}
-	}()
-
-	var runTask = func(t ITask) {
-		tm.logger.Info(logPrefix+" 执行任务: %s", t.TaskName())
-		if t.TaskHandler == nil {
-			return
-		}
-
-		defer func() {
-			if err := recover(); err != nil {
-				tm.logger.Warn(logPrefix+" 任务发生 panic, 重新加入任务队列 [%s], %#v", t.TaskName(), err)
-				time.Sleep(10 * time.Second)
-				// 重新加入执行队列
-				producerList <- t
-			} else {
-				tm.logger.Warn(logPrefix+" 任务正常退出: %s", t.TaskName())
-			}
-		}()
-
-		tm.logger.Info(logPrefix+" 任务开始执行: %s", t.TaskName())
-		t.TaskHandler(ctx)
-	}
-
-	for _task := range producerList {
-		go runTask(_task)
+		hdlDefault.handleTasks(ctx, tm.taskList)
 	}
 }

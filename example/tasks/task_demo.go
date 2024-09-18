@@ -59,7 +59,7 @@ func (t *TaskDemo) TaskHandler(ctx context.Context) error {
 	if err != nil {
 		fmt.Printf("插入任务失败: %v\n", err)
 	} else {
-		fmt.Printf("插入任务成功: id=%s queue=%s]n", info.ID, info.Queue)
+		fmt.Printf("插入任务成功: id=%s queue=%s]\n", info.ID, info.Queue)
 	}
 
 	time.Sleep(time.Second * 2)
