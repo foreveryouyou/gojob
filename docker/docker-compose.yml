@@ -6,19 +6,22 @@ services:
     command: --default-authentication-plugin=mysql_native_password
     restart: unless-stopped
     ports:
-      - 23306:3306
+      - 53306:3306
     # Use root/example as user/password credentials
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-123456}
       TZ: Asia/Shanghai
     volumes:
       - mysql57_data:/var/lib/mysql
+      - ./xxl-job/tables_xxl_job.sql:/docker-entrypoint-initdb.d/tables_xxl_job.sql
+    networks:
+      - gojob
 
   redis:
     image: redis:6-alpine
     restart: unless-stopped
     ports:
-      - "26379:6379"
+      - "56379:6379"
     volumes:
       - $PWD/data:/data:rw
       - $PWD/redis/redis.conf:/usr/local/etc/redis/redis.conf:rw
@@ -27,6 +30,23 @@ services:
       test: ["CMD", "redis-cli", "ping"]
       retries: 3
       timeout: 5s
+    networks:
+      - gojob
+
+  xxl-job:
+    image: xuxueli/xxl-job-admin:${XXL_JOB_VERSION:-2.4.1}
+    restart: unless-stopped
+    ports:
+      - "58080:8080"
+    environment:
+      PARAMS: "--spring.datasource.url=jdbc:mysql://root:${MYSQL_ROOT_PASSWORD:-123456}@mysql57:3306/xxl_job?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&serverTimezone=Asia/Shanghai --xxl.job.accessToken=abcdefg"
+    volumes:
+      - $PWD/data/applogs:/data/applogs:rw
+    networks:
+      - gojob
 
 volumes:
   mysql57_data:
+
+networks:
+  gojob:
