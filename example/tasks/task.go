@@ -28,9 +28,9 @@ func Setup(opt atask.RedisClientOpt) {
 	taskManager = atask.NewTaskManager(atask.ParamNewTM{
 		RedisOpt: opt,
 	})
-	taskManager.AddTask(TaskList()...)
 }
 
 func Run(context context.Context) {
+	taskManager.AddTask(TaskList()...)
 	taskManager.Start(context)
 }

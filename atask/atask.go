@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/hibiken/asynq"
+	xxl "github.com/xxl-job/xxl-job-executor-go"
 )
 
 const (
@@ -23,6 +24,8 @@ type TaskManager struct {
 	asynqServer   *asynq.Server
 
 	providerType int // 任务调度实现方式
+
+	xxlJobExcutor func() xxl.Executor
 }
 
 type ParamNewTM struct {
@@ -30,6 +33,8 @@ type ParamNewTM struct {
 
 	RedisOpt RedisClientOpt
 	Logger   ILogger
+
+	XXLJobExcutor func() xxl.Executor
 }
 
 func NewTaskManager(param ParamNewTM) (tm *TaskManager) {
@@ -41,6 +46,8 @@ func NewTaskManager(param ParamNewTM) (tm *TaskManager) {
 	if tm.providerType != ProviderTypeDefault && tm.providerType != ProviderTypeXXLJob {
 		panic("atask provider type error")
 	}
+
+	tm.xxlJobExcutor = param.XXLJobExcutor
 
 	// logger
 	tm.logger = param.Logger
@@ -167,6 +174,13 @@ func (tm *TaskManager) handleTask(ctx context.Context) {
 
 	switch tm.providerType {
 	case ProviderTypeXXLJob:
+		if tm.xxlJobExcutor == nil {
+			panic("xxlJobExcutor() is nil")
+		}
+		hdl := taskHandlerProviderXXLJob{
+			xxlJobExcutor: tm.xxlJobExcutor(),
+		}
+		hdl.handleTasks(ctx, tm.taskList)
 
 	case ProviderTypeDefault:
 		fallthrough

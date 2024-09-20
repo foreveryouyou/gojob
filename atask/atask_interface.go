@@ -18,7 +18,7 @@ type ITask interface {
 	TaskInterval() int64
 
 	// TaskHandler 任务执行逻辑
-	TaskHandler(ctx context.Context) (err error)
+	TaskHandler(ctx context.Context, args ...any) (err error)
 
 	// TaskFunc 任务处理逻辑
 	// TaskFunc() *TaskFunc

@@ -36,7 +36,7 @@ func (t *TaskDemo) TaskInterval() int64 {
 }
 
 // TaskHandler 任务执行逻辑
-func (t *TaskDemo) TaskHandler(ctx context.Context) error {
+func (t *TaskDemo) TaskHandler(ctx context.Context, args ...any) error {
 	taskId := strconv.FormatInt(time.Now().UnixMilli(), 10)
 	taskPayload := []byte("hello" + time.Now().Format(time.DateTime))
 
