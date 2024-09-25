@@ -20,9 +20,22 @@ func init() {
 type TaskDemo struct {
 }
 
-// TaskName 任务名称, 仅用于给人看的
-func (t *TaskDemo) TaskName() string {
+// ID 任务唯一标识, 如: "imageResize"
+func (t *TaskDemo) ID() string {
+	return "demo:task"
+}
+
+// Name 任务名称, 仅用于给人看的
+func (t *TaskDemo) Name() string {
 	return "demo测试任务"
+}
+
+// Schedule 任务调度配置
+func (t *TaskDemo) Schedule() atask.Schedule {
+	return atask.Schedule{
+		Type: atask.ScheduleTypeCron,
+		Conf: "",
+	}
 }
 
 // Cron 定时器表达式
@@ -35,8 +48,8 @@ func (t *TaskDemo) TaskInterval() int64 {
 	return 0
 }
 
-// TaskHandler 任务执行逻辑
-func (t *TaskDemo) TaskHandler(ctx context.Context, args ...any) error {
+// Handle 任务执行逻辑
+func (t *TaskDemo) Handle(ctx context.Context, args ...any) error {
 	taskId := strconv.FormatInt(time.Now().UnixMilli(), 10)
 	taskPayload := []byte("hello" + time.Now().Format(time.DateTime))
 
@@ -79,7 +92,7 @@ func (t *TaskDemo) TaskQueue() *atask.TaskQueue {
 
 // queueHandler 任务队列消费逻辑
 func (t *TaskDemo) queueHandler(ctx context.Context, at *asynq.Task) (err error) {
-	fmt.Printf("[%s] 处理任务, id=%s, payload=%s\n", t.TaskName(), at.ResultWriter().TaskID(), at.Payload())
+	fmt.Printf("[%s] 处理任务, id=%s, payload=%s\n", t.Name(), at.ResultWriter().TaskID(), at.Payload())
 
 	/* if time.Now().UnixMilli()%2 == 0 {
 		// 返回错误的情况, 会自动重试, 直到用完重试次数

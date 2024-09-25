@@ -18,9 +18,9 @@ func (hdl *taskHandlerProviderXXLJob) handleTasks(ctx context.Context, taskList 
 	exec.Init()
 
 	for _, v := range taskList {
-		hdl.tm.logger.Info("添加任务: %s", v.TaskName())
-		exec.RegTask(v.TaskName(), func(cxt context.Context, param *xxl.RunReq) (msg string) {
-			v.TaskHandler(ctx)
+		hdl.tm.logger.Info("添加任务: %s", v.Name())
+		exec.RegTask(v.ID(), func(cxt context.Context, param *xxl.RunReq) (msg string) {
+			v.Handle(ctx, param)
 			return
 		})
 	}

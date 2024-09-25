@@ -8,8 +8,14 @@ import (
 
 // ITask 基本任务定义, 所有任务都必须实现该接口
 type ITask interface {
-	// TaskName 任务名, 如: "图片处理"
-	TaskName() string
+	// ID 任务唯一标识, 如: "imageResize"
+	ID() string
+
+	// Name 任务显示名, 仅用于显示, 无业务逻辑, 如: "图片处理"
+	Name() string
+
+	// Schedule 任务调度配置
+	Schedule() Schedule
 
 	// Cron 定时器表达式
 	TaskCron() string
@@ -17,14 +23,30 @@ type ITask interface {
 	// Interval 执行间隔时间, 单位: 秒
 	TaskInterval() int64
 
-	// TaskHandler 任务执行逻辑
-	TaskHandler(ctx context.Context, args ...any) (err error)
+	// Handle 任务执行逻辑
+	Handle(ctx context.Context, args ...any) (err error)
 
 	// TaskFunc 任务处理逻辑
 	// TaskFunc() *TaskFunc
 
 	// 任务队列配置, 不需要任务队列的话返回nil即可
 	TaskQueue() *TaskQueue
+}
+
+type Schedule struct {
+	// 调度类型: cron, fixedInterval
+	Type ScheduleType
+
+	// 调度配置
+	//   调度类型为cron, 值为 "cron表达式"
+	//   调度类型为fixedInterval, 值为 "执行间隔时间, 单位: 秒"
+	Conf string
+
+	// Cron 定时器表达式
+	Cron string
+
+	// Interval 执行间隔时间, 单位: 秒
+	Interval int64
 }
 
 type TaskFunc struct {

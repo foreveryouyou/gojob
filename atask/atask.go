@@ -13,6 +13,13 @@ const (
 	ProviderTypeXXLJob         // 由外部 xxl-job 调度
 )
 
+const (
+	ScheduleTypeCron          ScheduleType = iota // cron
+	ScheduleTypeFixedInterval                     // 固定间隔
+)
+
+type ScheduleType int
+
 type RedisClientOpt = asynq.RedisClientOpt
 
 // TaskManager 任务管理器
@@ -133,7 +140,7 @@ func (tm *TaskManager) setupAsynqServer(ctx context.Context) {
 			continue
 		}
 		mux.HandleFunc(tq.Pattern, tq.Handler)
-		tm.logger.Info("[TaskManager handler] 注册: %s, %s", t.TaskName(), tq.Pattern)
+		tm.logger.Info("[TaskManager handler] 注册: %s, %s", t.Name(), tq.Pattern)
 	}
 
 	// 最大并发 workers 数

@@ -17,9 +17,9 @@ func (hdl *taskHandlerProviderDefault) handleTasks(ctx context.Context, taskList
 	hdl.cron = cron.New(cron.WithSeconds())
 
 	for _, v := range taskList {
-		hdl.tm.logger.Info("添加任务: %s", v.TaskName())
+		hdl.tm.logger.Info("添加任务: %s", v.Name())
 		hdl.cron.AddFunc(v.TaskCron(), func() {
-			v.TaskHandler(ctx)
+			v.Handle(ctx)
 		})
 	}
 
