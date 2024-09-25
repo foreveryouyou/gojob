@@ -8,7 +8,7 @@ import (
 
 // ITask 基本任务定义, 所有任务都必须实现该接口
 type ITask interface {
-	// ID 任务唯一标识, 如: "imageResize"
+	// ID 任务唯一标识, 如: "imageResize", "image.resize"
 	ID() string
 
 	// Name 任务显示名, 仅用于显示, 无业务逻辑, 如: "图片处理"
@@ -16,12 +16,6 @@ type ITask interface {
 
 	// Schedule 任务调度配置
 	Schedule() Schedule
-
-	// Cron 定时器表达式
-	TaskCron() string
-
-	// Interval 执行间隔时间, 单位: 秒
-	TaskInterval() int64
 
 	// Handle 任务执行逻辑
 	Handle(ctx context.Context, args ...any) (err error)
@@ -47,6 +41,10 @@ type Schedule struct {
 
 	// Interval 执行间隔时间, 单位: 秒
 	Interval int64
+}
+
+// RunReq 任务执行请求参数
+type RunReq struct {
 }
 
 type TaskFunc struct {

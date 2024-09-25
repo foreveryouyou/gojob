@@ -140,7 +140,7 @@ func (tm *TaskManager) setupAsynqServer(ctx context.Context) {
 			continue
 		}
 		mux.HandleFunc(tq.Pattern, tq.Handler)
-		tm.logger.Info("[TaskManager handler] 注册: %s, %s", t.Name(), tq.Pattern)
+		tm.logger.Info("[TaskManager handler] 注册任务: %s (%s)", tq.Pattern, t.Name())
 	}
 
 	// 最大并发 workers 数
@@ -186,6 +186,7 @@ func (tm *TaskManager) handleTask(ctx context.Context) {
 		}
 		hdl := taskHandlerProviderXXLJob{
 			xxlJobExcutor: tm.xxlJobExcutor(),
+			tm:            tm,
 		}
 		hdl.handleTasks(ctx, tm.taskList)
 

@@ -34,18 +34,8 @@ func (t *TaskDemo) Name() string {
 func (t *TaskDemo) Schedule() atask.Schedule {
 	return atask.Schedule{
 		Type: atask.ScheduleTypeCron,
-		Conf: "",
+		Conf: "* * * * * *",
 	}
-}
-
-// Cron 定时器表达式
-func (t *TaskDemo) TaskCron() string {
-	return "* * * * * *"
-}
-
-// TaskInterval 执行间隔时间, 单位: 秒
-func (t *TaskDemo) TaskInterval() int64 {
-	return 0
 }
 
 // Handle 任务执行逻辑
@@ -70,9 +60,9 @@ func (t *TaskDemo) Handle(ctx context.Context, args ...any) error {
 	defer client.Close()
 	info, err := client.EnqueueContext(ctx, asynqTask, asynq.Queue(tq.Name))
 	if err != nil {
-		fmt.Printf("插入任务失败: %v\n", err)
+		fmt.Printf("插入队列失败: %v\n", err)
 	} else {
-		fmt.Printf("插入任务成功: id=%s queue=%s]\n", info.ID, info.Queue)
+		fmt.Printf("插入队列成功: id=%s queue=%s]\n", info.ID, info.Queue)
 	}
 
 	time.Sleep(time.Second * 2)
@@ -92,7 +82,7 @@ func (t *TaskDemo) TaskQueue() *atask.TaskQueue {
 
 // queueHandler 任务队列消费逻辑
 func (t *TaskDemo) queueHandler(ctx context.Context, at *asynq.Task) (err error) {
-	fmt.Printf("[%s] 处理任务, id=%s, payload=%s\n", t.Name(), at.ResultWriter().TaskID(), at.Payload())
+	fmt.Printf("[%s] 处理队列任务, id=%s, payload=%s\n", t.Name(), at.ResultWriter().TaskID(), at.Payload())
 
 	/* if time.Now().UnixMilli()%2 == 0 {
 		// 返回错误的情况, 会自动重试, 直到用完重试次数

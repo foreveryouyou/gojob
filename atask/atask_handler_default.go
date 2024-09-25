@@ -18,7 +18,9 @@ func (hdl *taskHandlerProviderDefault) handleTasks(ctx context.Context, taskList
 
 	for _, v := range taskList {
 		hdl.tm.logger.Info("添加任务: %s", v.Name())
-		hdl.cron.AddFunc(v.TaskCron(), func() {
+		sched := v.Schedule()
+		// todo 非cron类型的处理
+		hdl.cron.AddFunc(sched.Cron, func() {
 			v.Handle(ctx)
 		})
 	}
