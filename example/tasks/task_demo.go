@@ -33,8 +33,10 @@ func (t *TaskDemo) Name() string {
 // Schedule 任务调度配置
 func (t *TaskDemo) Schedule() atask.Schedule {
 	return atask.Schedule{
+		// Type: atask.ScheduleTypeFixedInterval,
+		// Conf: "3",
 		Type: atask.ScheduleTypeCron,
-		Conf: "* * * * * *",
+		Conf: "*/3 * * * * *",
 	}
 }
 
@@ -65,7 +67,7 @@ func (t *TaskDemo) Handle(ctx context.Context, args ...any) error {
 		fmt.Printf("插入队列成功: id=%s queue=%s]\n", info.ID, info.Queue)
 	}
 
-	time.Sleep(time.Second * 2)
+	time.Sleep(time.Second * 6)
 
 	return nil
 }

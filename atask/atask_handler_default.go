@@ -19,31 +19,46 @@ type taskHandlerProviderDefault struct {
 func (hdl *taskHandlerProviderDefault) handleTasks(ctx context.Context, taskList []ITask) {
 
 	hdl.cron = cron.New(cron.WithSeconds())
-	hdl.si = scheduler_interval.NewSchedulerInterval()
+	hdl.si = scheduler_interval.NewSchedulerInterval(
+		scheduler_interval.WithLogger(hdl.tm.logger),
+	)
 	hdl.si.Start(ctx)
 
+	hdl.tm.logger.Info("[TaskHandlerProviderDefault] Start...")
+
 	for _, v := range taskList {
-		hdl.tm.logger.Info("添加任务: %s", v.Name())
 		sched := v.Schedule()
 		switch sched.Type {
 		case ScheduleTypeCron:
-			hdl.tm.logger.Info("添加任务: %s, cron: %s", v.Name(), sched.Cron)
-			hdl.cron.AddFunc(sched.Cron, func() {
+			hdl.tm.logger.Info("添加任务: [%s], cron: [%s]", v.Name(), sched.Conf)
+			cronExpr, err := sched.Cron()
+			if err != nil {
+				hdl.tm.logger.Error("无效的cron表达式: [%s], err: %s", sched.Conf, err.Error())
+				continue
+			}
+			hdl.cron.AddFunc(cronExpr, func() {
 				v.Handle(ctx)
 			})
+
 		case ScheduleTypeFixedInterval:
-			hdl.tm.logger.Info("添加任务: %s, interval: %d s", v.Name(), sched.Interval)
+			hdl.tm.logger.Info("添加任务: [%s], interval: [%s]", v.Name(), sched.Conf)
+			interval, err := sched.Interval()
+			if err != nil {
+				hdl.tm.logger.Error("无效的interval: [%s], err: %s", sched.Conf, err.Error())
+				continue
+			}
 			entry := scheduler_interval.Task{
 				Handle: func(ctx context.Context) (err error) {
 					return v.Handle(ctx)
 				},
 				ID:       v.ID(),
-				Interval: time.Second * time.Duration(sched.Interval),
+				Interval: time.Second * time.Duration(interval),
 				RetryMax: 0,
 			}
 			hdl.si.AddTask(entry)
+
 		default:
-			hdl.tm.logger.Error("不支持的任务调度类型: %d", sched.Type)
+			hdl.tm.logger.Error("不支持的任务调度类型: [%d]", sched.Type)
 		}
 	}
 

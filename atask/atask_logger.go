@@ -1,41 +1,10 @@
 package atask
 
-import "log"
-
-type ILogger interface {
-	Debug(template string, args ...any)
-	Info(template string, args ...any)
-	Warn(template string, args ...any)
-	Error(template string, args ...any)
-	Fatal(template string, args ...any)
-}
-
-type defaultLogger struct {
-}
-
-func (l *defaultLogger) Debug(template string, args ...any) {
-	log.Printf(template, args...)
-}
-
-func (l *defaultLogger) Info(template string, args ...any) {
-	log.Printf(template, args...)
-}
-
-func (l *defaultLogger) Warn(template string, args ...any) {
-	log.Printf(template, args...)
-}
-
-func (l *defaultLogger) Error(template string, args ...any) {
-	log.Printf(template, args...)
-}
-
-func (l *defaultLogger) Fatal(template string, args ...any) {
-	log.Printf(template, args...)
-}
+import "github.com/foreveryouyou/gojob/pkg/logger"
 
 // asynqLogger 自定义asynqLogger
 type asynqLogger struct {
-	logger ILogger
+	logger logger.ILogger
 }
 
 func (l *asynqLogger) formatArgs(args ...any) (msg string, _args []any) {

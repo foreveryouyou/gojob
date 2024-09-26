@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/foreveryouyou/gojob/pkg/logger"
 	"github.com/hibiken/asynq"
 	xxl "github.com/xxl-job/xxl-job-executor-go"
 )
@@ -13,18 +14,11 @@ const (
 	ProviderTypeXXLJob         // 由外部 xxl-job 调度
 )
 
-const (
-	ScheduleTypeCron          ScheduleType = iota // cron
-	ScheduleTypeFixedInterval                     // 固定间隔
-)
-
-type ScheduleType int
-
 type RedisClientOpt = asynq.RedisClientOpt
 
 // TaskManager 任务管理器
 type TaskManager struct {
-	logger   ILogger
+	logger   logger.ILogger
 	taskList []ITask
 
 	asynqRedisOpt RedisClientOpt
@@ -39,7 +33,7 @@ type ParamNewTM struct {
 	ProviderType int // 任务调度实现方式
 
 	RedisOpt RedisClientOpt
-	Logger   ILogger
+	Logger   logger.ILogger
 
 	XXLJobExcutor func() xxl.Executor
 }
@@ -59,7 +53,7 @@ func NewTaskManager(param ParamNewTM) (tm *TaskManager) {
 	// logger
 	tm.logger = param.Logger
 	if tm.logger == nil {
-		tm.logger = &defaultLogger{}
+		tm.logger = logger.DefaultLogger()
 	}
 
 	// redis连接配置
@@ -84,7 +78,16 @@ func (tm *TaskManager) AddTask(tasks ...ITask) {
 
 // Start 启动任务管理器
 func (tm *TaskManager) Start(ctx context.Context) {
-	tm.logger.Info("[TaskManager] 开始执行... %d 个任务", len(tm.taskList))
+	handlerType := ""
+	switch tm.providerType {
+	case ProviderTypeXXLJob:
+		handlerType = "xxl-job"
+	case ProviderTypeDefault:
+		fallthrough
+	default:
+		handlerType = "内置(default)"
+	}
+	tm.logger.Info("[TaskManager] 启动, 共 %d 个任务, TaskHandler: %s", len(tm.taskList), handlerType)
 
 	// 启动任务处理
 	go tm.handleTask(ctx)
@@ -176,7 +179,7 @@ func (tm *TaskManager) setupAsynqServer(ctx context.Context) {
 
 func (tm *TaskManager) handleTask(ctx context.Context) {
 	time.Sleep(time.Second * 1)
-	logPrefix := "[TaskManager TaskHandler]"
+	logPrefix := "[TaskManager] TaskHandler"
 	tm.logger.Info(logPrefix + " 开始执行...")
 
 	switch tm.providerType {
