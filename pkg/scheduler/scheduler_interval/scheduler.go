@@ -33,7 +33,7 @@ type Task struct {
 	// Interval 调度间隔
 	Interval time.Duration
 
-	// RetryMax 重试次数
+	// RetryMax 最大重试次数, 0-表示无限制
 	RetryMax int
 	// retryTimes 重试次数
 	retryTimes int
@@ -53,6 +53,9 @@ func NewSchedulerInterval(opts ...Option) (si *SchedulerInterval) {
 
 	for _, opt := range opts {
 		opt(si)
+	}
+	if si.logger == nil {
+		si.logger = logger.DefaultLogger()
 	}
 	return
 }
@@ -135,7 +138,7 @@ func (s *SchedulerInterval) runTask(ctx context.Context, t Task) {
 						fmt.Printf("task %s error: %s", t.ID, err)
 						t.retryTimes++
 					}
-					if t.retryTimes >= t.RetryMax {
+					if t.RetryMax > 0 && t.retryTimes >= t.RetryMax {
 						s.logger.Warn("task %s retry max %d times, stop", t.ID, t.RetryMax)
 						return
 					}

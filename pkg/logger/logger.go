@@ -13,6 +13,10 @@ type ILogger interface {
 type defaultLogger struct {
 }
 
+func DefaultLogger() ILogger {
+	return &defaultLogger{}
+}
+
 func (l *defaultLogger) Debug(template string, args ...any) {
 	log.Printf(template, args...)
 }
